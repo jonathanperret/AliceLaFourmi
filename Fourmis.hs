@@ -58,10 +58,14 @@ anime fs = mapM_ (putStrLn . dessine) étapes >> print (length étapes)
   where étapes = simule fs
 
 animeLigne fs = do
-    putStr "\x1b[?25l"
-    mapM_ (\e -> putStr ('\x0d':dessine e++"\x1b[K") >> usleep 50000) étapes
-    putStrLn "\x1b[?25h"
-  where étapes = simule fs
+    cacheCurseur
+    sequence_ $ map ((>>usleep 50000) . putStr . remplaceLigne . dessine) étapes
+    montreCurseur
+  where
+    étapes = simule fs
+    remplaceLigne txt = '\x0d' : txt ++ "\x1b[K"
+    cacheCurseur = putStr "\x1b[?25l"
+    montreCurseur = putStrLn $ remplaceLigne "\x1b[?25h"
 
 simule fs = takeWhile (not.null) $ iterate procède $ triFourmis fs
 
